@@ -1,0 +1,1084 @@
+%
+%Paper for FC 2010
+%Title: Leakage-Resilient RFID Authentication Protocol with Forward-Privacy
+%Authors: Shin'ichiro Matuo and Moti Yung
+%
+%Editing History
+%	04/09/2009	Shin'ichiro
+%	06/09/2009	Shin'ichiro
+%	08/09/2009	Shin'ichiro
+%	09/09/2009	Shin'ichiro
+%	10/09/2009	Shin'ichiro
+%	11/09/2009	Shin'ichiro
+%	14/09/2009	Shin'ichiro
+%	15/09/2009	Moti
+%	18/09/2009	Checked by Native
+%	20/09/2009	Shin'ichiro 
+
+\documentclass[english]{llncs}
+\usepackage[T1]{fontenc}
+\usepackage[latin9]{inputenc}
+\usepackage[dvipdfm]{graphicx}
+
+\usepackage{babel}
+
+\begin{document}
+
+\title{Security vs. Privacy Tag Game:\\
+RFID Authentication with Forward-Privacy and Leakage-Resilience}
+
+\maketitle
+%\titlerunning{Leakage-Resilient RFID Authentication Protocol with Forward-Privacy}
+%\author{}
+%Shin'ichiro Matsuo\inst{1} \and Moti Yung\inst{2,3}}
+%\institute{National Institute of Information and Communication Technology
+%\and Columbia University
+%\and Google Inc.}
+\date{\today} 
+\begin{abstract}
+Huge number of low power devices, such as smart-card and RFID-tags,
+will be used around our life including in commercial and financial
+activities. A prime application of such devices is entity
+authentication in pervasive environment.  The obvious concerns in this
+environment involves getting security against tag-forgery (even by
+adversary controlled readers) and, on the other hand, giving users
+privacy against linking of different authentication transcripts.
+%
+%
+  Many cryptographic protocols have realizes such
+  requirements. However, there is no scheme which realizes, both,
+  forward-privacy and backward security right after some leakage is
+  occurred. Since some devices among the huge quantity of expected
+  devices will surely be compromised.  it seems highly important, from
+  an engineering point of view, to deal with limited damage of such
+  exposures.
+%
+ In this paper, we propose the first scheme that realizes both
+ requirements. It protects against partial leakage of tag-secrets and
+ assures that forward-privacy is kept even if full information are
+ leaked to an adversary.  
+%%Security of our protocol with partial
+%% leakage is based on pseudo-random generator by Pietrzak\cite{P09},
+%% and forward-privacy with full leakage is proven in random oracle
+%% model.
+\\ {\bf Keyword: } RFID authentication, leakage-resiliency and
+ forward-privacy
+\end{abstract}
+
+\section{Introduction}
+\subsection{Background}
+In coming years, more and more devices are going to be put at the hand
+of consumers and are and will be used for authentication (smartcards,
+RFID-tags, etc.) for applications combining cyber as well as the
+physical world like point-of-sale authentication during shopping.
+This new technology poses increasingly important security and privacy
+issues.
+%
+%Recent years, entity authentication by cryptographic techniques is
+%used in wide range of environments. For example, we authenticate most
+%e-banking services and shopping sites by using public key certificates
+%and SSL protocol, though these site authenticates users by using ID
+%and password.  Moreover, 
+%
+In these environments, cryptographic authentication protocols are used
+by users holding devices (e.g., mobile phones) with smart-cards and
+RFID-tags.  They are also used for many services such as digital cash,
+transportation card and key-less entry system. Thus, these protocols
+becomes fundamentals of our financial activities and physical
+security.
+
+%Recent changes of environment in information services, e.g. cloud
+%computing and sensor network, request
+In this integrated world a typical intercollaboration 
+is performed
+between servers
+with huge computational power and a huge number of low-end devices.
+The weakest link in this environment is the low-end device 
+and it is crucial to provide  security to the 
+device  and simultaneously  privacy to its user, and
+mitigate properly security failure of some devices.
+% for low-end devices
+%become quite important to realize security and privacy of total
+%service.
+% Thus, constructing secure an efficient authentication
+%protocol for low-end devices collects much attention.
+%
+Thus, main considerations in RFID-tag authentication scheme are
+tag-unforgeability combined with forward-privacy, and achieving this
+with a limited computational resource.
+%
+For authentication purpose, we must prevent forgery (where a forged
+tag is authenticated as valid). This requirement is general for
+authentication protocol.  
+
+A special requirement for RFID-authentication
+since it indicates location of the tag in the real world, is
+preserving privacy. In particular, two types of privacy are considered
+in existing research. The first one is personal information
+disclosure. Namely, obtaining identifier from the tag (for example, we
+can obtain names of goods, amount of money a person posses and the
+name of a person, if the tag records and give them as answers for
+tag-reader). This privacy issue can be prevented by encrypting the
+data by using secure cryptographic algorithm.  However, if we use
+deterministic algorithm for such encryption, the second type of
+privacy issue, that of tracing, occurs.  If an adversary reads the same
+tag at two different time, he can trace activity of the owner of the
+tag by linking different protocol messages sent from the tag. Thus,
+``unlinkability'' is also required for RFID-tag authentication
+protocol.  
+
+The third requirement is considering limited computational
+power.  Generally, RFID tag has limited capability of computation
+compared from PC and smart-phone.  This limitation is due to their
+gate size and power consumption.  For a passive tag, they do not have
+power supply, thus the computational power is so limited. Then, it is
+difficult for RFID-tag to execute public-key cryptography which
+requires modulo exponentiation.  Bogdanov et al. showed that 128-bit
+output hash function is implemented by 4,000 gates from PRESENT block
+cipher\cite{BLPPRS08}.  It is not easy to execute many cryptographic
+algorithm in RFID-tag.  Thus, we assume that allowed computation for
+the passive RFID-tag are XOR operation, small block cipher, small
+stream cipher and resulting hash function.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Another topic on RFID-authentication protocol is model of adversary.
+There are two types of adversary. One is only eavesdropping protocol
+message only. He is called as ``passive adversary'' in general
+cryptographic protocol literature. The other type can corrupt some
+target tag, then he obtain all secret information in the tag. He is
+called ``active adversary'' and generally considered in the security
+of cryptographic protocols.  In RFID-environment, corruption of the
+tag is performed by side-channel attack or cold-boot attack.  When we
+consider our usage of RFID-tag and current situation of side-channel
+attack and cold-boot attack.  They leak not full information in short
+time (of exposure of card to a rogue reader, say). The time for
+forgery is limited for the adversary. Thus, we can limit information
+he gets. We must consider only partial leakage for tag-unforgeability.
+
+In privacy aspect in RFID-tag, it is important to preserve past
+protocol message private when a tag is corrupted.  We call this
+``forward -privacy'' like forward-security notion is also considered
+in existing RFID-authentication. For privacy, an adversary can take
+unlimited time for performing the attack in contrary to attacking
+tag-unforgeability.  Thus, we must consider full-leakage for privacy.
+From the above analysis we conclude the need to have an authentication
+protocol in which tag-unforgeability (security) is kept for
+partial-leakage (hereafter backward security) and forward-privacy is
+kept for full-leakage.
+
+\subsection{Related Work}
+%
+%	RFID
+%
+
+Since Juels et al. pointed out privacy issue in RFID-authentication
+protocol \cite{JP03}, many RFID-authentication protocol studies have
+been conducted, such as \cite{OSK03,SWE02,HM04,AO05}.  The first
+protocol which realizes``forward-privacy'' was proposed by Ohkubo et
+al\cite{OSK03}. This protocol uses hash-chain constructed by one-way
+hash function and random oracle for processing protocol message.
+Though forward privacy of this protocol is proven, this protocol does
+not achieve backward security.  Most protocols are based on hash
+functions, some scheme uses pseudo-random functions and pseudo-random
+number generator instead of hash functions\cite{BM08,BLM06,LBM07}.
+However no scheme achieved or even considered both, forward-privacy and
+backward security until a recent scheme.
+
+
+Burmester and Munila recently proposed a protocol which has
+forward-privacy and backward security\cite{BM09}. Their protocol use
+pseudo-random function to achieve both security requirements and its
+security is claimed secure in Universally Composable setting.
+However, the analysis of this protocol is not rigorous for
+forward-privacy and backward security and assume certain refresh operation
+external to the tag.
+%leakage resilient. 
+Then, these security requirements are based on periodically updated
+random number generator with ``fresh randomness.''  The interval for
+the renewal is not firmly defined and the timing of renewal is
+independent of leakage of secret to adversary. Moreover, the exact
+nature of the refresh operation is not clearly defined.  The ``fresh
+randomness'' is given by an external; reader to the tag, thus, the
+secrecy of the fresh randomness is not guaranteed. Details of this scheme
+will be described in Section 2.
+
+%
+%	Leakage-resilient
+%
+
+Another topic which is essential in this paper is leakage-resilient
+cryptography. Generally, leakage resilience is considered to model
+side-channel attack and is a very current area of research. In
+ordinary cryptographic research, the security model does not consider
+leakage of secret information
+\footnote{In security analysis of cryptographic protocol corruption of
+  parties are considered, however, it is not considered in encryption
+  scheme,}.  
+%
+ However, due to recent progress in side-channel attack, cryptography
+ which is secure even after some secret information is leaked by
+ side-channel attack, is strongly desired.  Leakage resilient
+ cryptography aims to construct such a cryptographic algorithm, and a
+ goal of this work is to point out the relevance of leakage in the
+ area of RFID devices.  For symmetric cryptography, Petit et
+ al. proposed leakage-resilient pseudo-random generator from ideal
+ cipher\cite{PSPMY08}, then Dziembowski et al. proposed a
+ leakage-resilient stream cipher based on pseudo-random generator in
+ the standard model\cite{DP08}. Then Pietrzak proposed simplified
+ leakage-resilient stream cipher from wPRF\cite{P09}.  Recent days,
+ researchers considered public-key cryptographic algorithms which have
+ same leakage resilient characteristics\cite{ADW09,NS09} .
+
+
+\subsection{Our Contribution}
+In this paper, we propose a RFID-authentication protocol which
+fulfills rigorously both forward-privacy and backward security.
+%
+
+Basic idea for realizing forward privacy is similar as 
+the OSK protocol\cite{OSK03}.  
+It is, however,
+different from the OSK protocol by the fact that it adds
+tag-unforgeability against partial-leakage in the consideration
+(model, design and proofs). We note that the OSK protocol does not
+guarantee backward security because it use chain of one-way
+function. Our protocol fixes this problem by using pseudo-random
+generator by Pietrzak\cite{P09}. Though the security of protocol is
+proven with help of random oracle hash (idealized model), this
+protocol is nevertheless the first protocol which fulfills all the above
+requirements.
+
+Organization of this paper is as follows. In Section 2, we define RFID
+authentication protocol and present Burmester's and OSK
+protocol. Then, we observe leakage-resilient authentication
+cryptography, define leakage-resilient RFID authentication scheme and
+show Pietrzak's pseudo-random generator secure against partial-leakage
+in Section 3. The Section 4 shows our proposed scheme, security proofs
+and efficiency analysis. Section 5 conclude with our results.
+
+\section{RFID Authentication Scheme}
+
+
+\subsection{System model}
+
+First, we show the system model of RFID authentication. There exist
+three types of entities in this authentication protocol: a tag, a
+reader, and an authentication server. The functions and conditions
+for each entity are as follows:
+\begin{description}
+\item [{Tag:}] We assume that the RFID tag ${\cal {T}}$ is a passive tag.
+It can operate only when interrogated by a reader and only for a short
+time. The most important limitation is computational power. Each tag
+can perform only basic cryptographic calculations: hash functions,
+pseudo-random number generation and symmetric encryption, as well
+as simple XOR calculations. It is not tamper proof. An adversary can
+obtain some of (or all) the information stored in the tag.
+\item [{Reader:}] A reader ${\cal {R}}$ communicates with each tag and
+the authentication server. The reader acts as an intermediary between
+the tag and the authentication server. It does not retain any secret
+information or execute any cryptographic operation.
+\item [{Authentication}] \textbf{server}: An authentication server ${\cal {S}}$
+is used to evaluate the correctness of ${\cal T}$ upon receiving
+protocol messages from ${\cal {T}}$. The authentication server has
+huge computational power and storage and can be used to carry out
+any cryptographic computation. When the protocol message is valid
+for the tag, its output is $1$; otherwise, its output is $0$. An
+adversary cannot corrupt ${\cal {S}}$. 
+\end{description}
+
+\paragraph{Communication channel}
+
+The tag and the reader communicate over a wireless channel. Thus,
+an adversary can eavesdrop, modify, intercept, and insert any data
+in this channel. On the other hand, the reader and the authentication
+server communicate over a wired channel. We can easily establish a
+virtual private network between them. Thus, we assume that this channel
+is a secure channel, that is, both entities are authenticated and
+nobody can obtain plaintext.
+
+
+\subsection{Adversary model and security requirements}
+
+Here, we assume that an adversary ${\cal {A}}$ is active and adaptive.
+In other words, ${\cal {A}}$ can corrupt some RFID tags and adaptively
+act as a protocol participant.
+
+The power of ${\cal {A}}$ is modeled by giving oracle access to the
+protocol instance run by ${\cal {T}}$ and ${\cal {S}}$. Let $\Pi_{i}^{{\cal {T}}}$
+(resp. $\Pi_{i}^{{\cal {S}}}$) be the instance of protocol $\Pi$
+that ${\cal {T}}$ (resp. ${\cal {S}}$) executes in the $i$-th session.
+For each ${\cal {P}\in\{{\cal {T},{\cal {S}\}}}}$, the instances
+$\Pi_{i}^{{\cal {P}}}$ are executed sequentially; in other words,
+for each $i$, the execution of instance $\Pi_{i+1}^{{\cal {P}}}$
+starts after that of instance $\Pi_{i}^{{\cal {P}}}$ is completed.
+At the end of the $i$-th session, $\Pi_{i}^{{\cal {T}}}$ (resp.
+$\Pi_{i}^{{\cal {S}}}$) outputs a bit $acc_{i}^{{\cal T}}$ (resp.
+$acc_{i}^{{\cal T}}$) indicating whether ${\cal {T}}$ (resp. ${\cal {S}}$)
+accepts or aborts in session $i$. We assume that this bit is always
+known to${\cal {A}}$.
+
+We define the following types of oracles that ${\cal {A}}$ is allowed
+to access.
+\begin{description}
+\item [{$Execute(i)$:}] When this oracle is called, the complete execution
+between protocol instances $\Pi_{i}^{{\cal {T}}}$ and $\Pi_{i}^{{\cal {S}}}$
+is carried out. The output of this call is the transcript, that is,
+the sequence of all messages exchanged between $\Pi_{i}^{{\cal {T}}}$
+and $\Pi_{i}^{{\cal {S}}}$. The oracle models passive eavesdropping
+in session $i$.
+\item [{$Send(P,i,M)$:}] When this oracle is called, message $M$ is sent
+to the instance $\Pi_{i}^{{\cal {P}}}$. The output of this call is
+the message the instance $\Pi_{i}^{{\cal {P}}}$ would send after
+receiving the message $M$, given its current state. This oracle models
+active man-in-the-middle attacks in session $i$.
+\item [{$Leakage(i,{\cal {T})}$:}] This oracle models the corruption of
+the RFID tag ${\cal {T}}$. When this oracle is called, the oracle
+outputs 
+all secret for full corruption or partial secret for leakage.
+%all current states including the short-term secret $s_{s}$
+for session $i$.%
+\footnote{${\cal {A}}$ can obtain only the current internal state.%
+}
+\item [{$Test(i,{\cal {T})}$:}] This oracle is used only for testing security.
+When this oracle is called, it flips a coin $b\in\{0,1\}$ and answers
+$c=Send($\cal{T}$,j,M)$ for $j<i$ if $b=0$ or a random number
+if $b=1$. Here, $c$ must not be obtained from previous oracle calls. 
+\end{description}
+
+\paragraph{Correctness}
+
+The goal of this protocol is to authenticate each RFID tag. This means
+that an RFID tag that has the correct %short-term 
+secret is always authenticated. For the tag ${\cal {T}}$ and period
+$i$, if the %short-term 
+secrets that ${\cal {T}}$ and ${\cal {S}}$ hold are the same, the
+final output of ${\cal {S}}$ is $1$.
+
+
+\paragraph{Tag-unforgeability}
+
+Tag-unforgeability in this authentication protocol means that even
+if the adversary collects information, he/she is not successfully
+authenticated without presenting secret information. There are two
+types of 
+tag unforgeability: forgery involving uncorrupted tags and
+forgery involving leakage tags. We will define the latter category
+in the next paragraph. Here we define the first category.
+
+After several adaptive oracle calls, the adversary pretends that he/she
+possesses tag ${\cal {T'}}$, which is registered to the authentication
+server ${\cal {S}}$ and not corrupted, for session $i'>i$, where
+$i$ is the latest session number among the above oracle calls. The
+advantage of ${\cal {A}}$ is defined as the probability with which
+${\cal {S}}$ outputs $1$. We call the protocol $P_{i}$ secure in
+the sense of tag-unforgeability if the advantage is negligible.
+
+
+\paragraph{Backward security}
+
+This security notion deals with preventing tag-forgery after the leakage
+of secret information of a specific tag. After several adaptive oracle
+calls, the adversary pretends that he/she possesses tag ${\cal {T'}}$,
+which is registered to the authentication server ${\cal {S}}$ and
+is corrupted, for session $i'>i$, where $i$ is the latest session
+number among the above oracle calls. The advantage of ${\cal {A}}$
+is defined as the probability with which ${\cal {A}}$ distinguishes
+the $i+1$-th protocol message from a random number. We call the protocol
+$P_{i}$ backward secure if the advantage is negligible.
+
+
+\paragraph{Privacy}
+
+In this paper, we focus on {}``unlinkability'' as a notion of privacy.
+Privacy means that an adversary cannot form a link between two protocol
+messages from the same tag for two different sessions. Thus, privacy
+is defined as follows. The adversary executes a SEND oracle call to
+the target tag ${\cal {T},}$ and obtains an answer and then writes
+the answer--query pair to $L_{T}$. Next, the adversary executes SEND
+calls to the authentication server ${\cal {S}}$ and then writes the
+answer--query pair to $L_{S}$. Finally, the adversary executes the
+TEST oracle call, whose message is not in $L_{T}$ and $c\notin L_{S}$.
+The advantage of the adversary is defined as the probability that
+he/she distinguishes the random number from the past protocol message
+by a margin over 1/2. We say that the protocol $\Pi$ has privacy
+if this advantage is negligible.
+
+
+\paragraph{Forward Privacy}
+
+Forward privacy means that even if a target tag is corrupted, the
+adversary cannot link further protocol messages and past protocol
+messages before corruption. The security definition is similar to
+that of privacy, except that the adversary is allowed to call the
+corrupt oracle once. The adversary executes a SEND oracle call to
+the target tag ${\cal {T}},$ obtains an answer, and then writes the
+answer--query pair to $L_{T}$. Next, he/she executes SEND calls to
+the authentication server ${\cal {S}}$ and then writes the answer--query
+pair to $L_{S}$. Next, the adversary executes a CORRUPT oracle call
+to the target tag and obtains the internal state.
+Finally, the adversary executes a TEST oracle call, whose message
+is not in $L_{T}$ and $c\notin L_{S}$. The advantage of the adversary
+is defined as the probability that he/she distinguishes the random
+number from the protocol message by a margin over 1/2. We say that
+the protocol $\Pi$ has privacy in the forward secure sense 
+(forward-privacy)
+if this
+advantage is negligible.
+
+
+\subsection{Other Consideration for RFID Authentication}
+
+Juel et al. proposed DoS (Denial-of-Service)-like attacks for RFID
+authentication protocols\cite{JW06}. Some hash-chain-based protocols
+are limited by the number of executions. For such schemes, an adversary
+who attempts a DoS attack tries to authenticate the tag by exploiting
+this limitation. After the attack is complete, the authentication
+server gives the same {}``error'' messages. The adversary can trace
+the activity of the tag owner by tracing these messages. To overcome
+this drawback, in RFID-authentication protocols, the limitation of
+the number of authentications must be overcome.
+
+%\subsection{Security Definition}
+
+
+
+\subsection{Existing Schemes}
+
+
+\subsubsection{Protocol of Burmester et al.}
+
+Burmester et al. proposed an RFID-authentication scheme that achieves
+both forward privacy and backward security\cite{BM09}.
+The aim of this protocol is similar to that of our proposed protocol.
+Because their protocol involves the iteration of the RNG (random number
+generator) for calculating protocol messages, the basic concept is
+also similar to ours. We present the outline of this protocol for
+purposes of comparison.
+
+This protocol involves the use of two components: a pseudo-random
+generator with an internal state, which outputs pseudo-random numbers
+for a one-time authenticator, and a component with the refresh function.
+Periodically refreshing the internal state helps tag-unforgeability,
+and privacy is regained even when the adversary obtains some secret
+information in the tag. Note that forward privacy and backward security
+are realized only by the refresh function. Thus, a pseudo-random generator
+must not be a one-way function. An overview
+of this scheme is shown in Fig.\ref{fig:BM09}.
+
+%
+%\begin{figure}
+%\begin{centering}
+%\includegraphics[scale=0.7,bb = 0 0 200 100, draft, type=eps]{BM09.pdf} 
+%\par\end{centering}
+
+%\caption{Basic structure of the pseudo-random generator in the BM protocol}
+%\centering{}\label{fig:BM09} 
+%\end{figure}
+
+
+\begin{figure}
+\begin{center}
+\includegraphics[scale=0.7]{BM09.pdf}
+\caption{Basic structure of pseudo-random generator in BM protocol}
+\label{fig:BM09}
+\end{center}
+\end{figure}
+
+
+\paragraph{Protocol Details}
+
+Each tag ${\cal T}$ and an authentication server ${\cal S}$ share
+a synchronized RNG with the same algorithm, key, and seed. Each tag
+${\cal T}$ stores an identifier $ID_{tag}$, current state $g_{tag}$,
+key $K^{r}$ for refreshing, and a 1-bit flag $cnt$. Each tag ${\cal T}$
+has five random numbers and each server${\cal S}$ has six numbers.
+
+The authentication server ${\cal S}$ stores the following information
+in its database for each ${\cal T}$: \[
+DB=\{RN_{1}^{cur},RN_{1}^{next},RN_{2},RN_{3},RN_{4},RN_{5},ID_{tag},g_{tag},cnt'\}\]
+ These values are synchronized between ${\cal T}$ and ${\cal S}$.
+Random numbers are updated in the following manner: $cnt'\leftarrow0$,
+$RN_{1}^{cur}\leftarrow RN_{1}^{next}$, and the five random values
+$RN_{1}^{next},RN_{2},RN_{3},RN_{4},RN_{5}$ are chosen from $g_{tag}$.
+
+This protocol is a mutual authentication protocol. The authenticity
+is verified on the basis of the existence of a set of synchronized
+random numbers. In an optimistic case, this protocol is performed
+in four moves, and ${\cal T}$ and ${\cal S}$ must share three random
+numbers. When we consider the interruption of communication, this
+protocol requires a maximum of six moves and six random numbers. There
+is no cryptographic operation in the protocol execution other than
+random number generation.
+
+On refreshing the RNG, the following protocols are performed between
+${\cal S}$ and ${\cal T}$.\\
+At first, ${\cal S}$ decides to refresh the $state$ of ${\cal T}$:
+set $refresh$ ON, $RN_{1}^{start}\leftarrow RN_{1}^{next}$, and
+get $state'$ (by drawing four numbers from $g_{tag}$ and generating
+a random number $R$). The refresh protocol is an integral part of
+the above protocol for the normal case. The refresh function was developed
+using the pseudo-random generator proposed by Goldreich et al. \cite{GGM86}.
+Please refer to \cite{BM09} for details on this protocol.
+
+
+\paragraph{Drawbacks}
+
+The main drawback related to our goal is the lack of rigorous leakage
+resilience. The refresh function helps realize forward privacy and
+backward security. The refresh function is performed periodically
+or upon demand by ${\cal S}$. It is independent of the time of leakage
+of secret information. To synchronize the refresh time and the leakage,
+${\cal S}$ must notice the leakage; however, this is not possible.
+Therefore, some scenarios are still no secured. An additional drawback
+is the operation of the refresh function. ${\cal S}$ must send a
+fresh random number $R$ to the tag ${\cal T}$; however, there is
+no secure channel between ${\cal S}$ and ${\cal T}$. In our protocol
+model, the adversary is considered to obtain all the protocol messages.
+If the adversary obtains $R$ itself, pseudo-randomness of the RNG
+is not guaranteed.
+
+
+\paragraph{Efficiency}
+
+This protocol requires six-move communication for each authentication.
+Each tag must record six random numbers. For each authentication,
+in both the tag and authentication server, five random number generators
+must be run. For refreshing the pseudo-random generator, both devices
+must run the pseudo-random-number generator proposed by Goldreich
+et al. once.
+
+
+\subsubsection{OSK protocol}
+
+This protocol involves the use of two kinds of hash functions: $H(\cdot)$
+and $G(\cdot)$. $H(\cdot)$ is assumed to be a random oracle and
+$G(\cdot)$ is assumed to be a one-way function for forward privacy.
+The outline of the protocol is shown in Fig. \ref{fig:OSK03}.
+
+%
+%\begin{figure}[htb]
+%\begin{centering}
+%\includegraphics[scale=0.29,bb = 0 0 200 100, draft, type=eps]{OSK03-2.pdf} 
+%\par\end{centering}
+%\caption{Outline of OSK protocol}
+%\centering{}\label{fig:OSK03} 
+%\end{figure}
+
+
+\begin{figure}[htb]
+\begin{center}
+\includegraphics[scale=0.29]{OSK03-2.pdf}
+\caption{Outline of OSK protocol}
+\label{fig:OSK03}
+\end{center}
+\end{figure}
+
+
+\paragraph{Protocol Details}
+\begin{description}
+\item [{Setup:}] Tag ${\cal T}$ and authentication server ${\cal S}$
+share the secret value $s_{0}$. ${\cal S}$ sets the index $i=1$
+for the tag.
+\item [{Tag:}] For the $i$-th authentication, Tag ${\cal T}$ performs
+the following tasks:
+
+\begin{enumerate}
+\item sends an answer $a_{i}=H(i)$ to the reader, 
+\item renews the secret $s_{i+1}=G(s_{i})$ as determined from the previous
+secret $s_{i}$. 
+\end{enumerate}
+\item [{Authentication Server:}] The authentication server has a list of
+$(ID,S_{1},i)$, where $s_{1}$ is the initial secret information
+and is different for each tag. The authentication server confirms
+\[
+a_{i}\stackrel{?}{=}H(G^{i}(s_{1})).\]
+ If the server finds $a_{i}'$ s.t. $a_{i}'=a_{i},$ then the ID is
+returned; otherwise, {}``NG'' is returned. 
+\end{description}
+
+\paragraph{Security Evaluation}
+
+The authenticity and indistinguishability can be proven when $H$
+is assumed to be a random oracle. Forward privacy is mainly based
+on one-wayness of $G$. Roughly speaking, the proof involves creating
+an adversary who breaks the one-wayness by using another adversary
+who breaches the forward privacy of this scheme.
+
+
+\section{Leakage-Resilient Authentication Scheme}
+
+
+\subsection{Leakage-Resilient Cryptography}
+
+Leakage-resilient cryptography ensures the security of the cryptographic
+algorithm or cryptographic protocol even after some of (or all) the
+secret information (e.g., secret key) has been leaked to the adversary.
+We will describe the formal observation of this notion from \cite{DP08}.
+Let $CP$ be a keyed cryptographic primitive, $S_{0}$ be an initial
+state of $CP$, and $f(\cdot)$ be a leakage function for $CP$. For
+example, an adversary obtains $f(S_{0})$ for the initial state. In
+the case of full leakage of information, where the adversary can obtain
+all the secret information, $f(S_{0})=S_{0}$. To consider partial
+leakage of information, that is, side-channel attack and cold boot
+attack, we restrict the range of leakage. Let $\lambda$ be a parameter
+that defines the range of leaked information $\{0,1\}^{\lambda}$,
+where $\lambda\ll|S_{0}|$. To show that $CP$ is leakage resilient
+for $f(\cdot)$, we adopt an information theoretical approach. We
+estimate how the leakage of the secret information reduces the entropy
+of cryptographic processing
+to show the security of a scheme.
+
+
+\subsection{Leakage Resilience in RFID Authentication Schemes}
+
+In RFID authentication, the leakage of secret information occurs by
+side-channel attack or cold-boot attack. In general, side-channel
+attack does not lead to leakage of all the secret information in the
+tag. For backward security, the time available to the adversary
+is limited, because in most cases, RFID tags are valid only during
+a certain time period. It follows that the adversary can obtain a
+limited amount of leaked information. Thus, we consider only partial
+leakage of information for backward security. The definition of backward
+security for backward security is as described below.
+\begin{definition}
+\textbf{(Leakage-resilient backward security)} Adversary ${\cal A}$
+performs the following actions: 
+\begin{enumerate}
+\item ${\cal A}$ accesses the tag adaptively by sending $i$ and receives
+answer $a_{i}$. 
+\item ${\cal A}$ accesses the authentication server adaptively by sending
+$a_{i}$ and receives an answer $id$ or NG. 
+\item ${\cal A}$ accesses the Leakage oracle by sending $j$ and receives
+the partial secret $f_{j}(s_{j})$. 
+\item ${\cal A}$ accesses the Test oracle, and the oracle chooses $b\in_{U}\{0,1\}$
+randomly. If $b=0$, ${\cal A}$ is given $a_{j+1}$; otherwise, ${\cal A}$
+is given $r$ as a truly random value. 
+\item ${\cal A}$ guess $b$ and outputs $b'$. 
+\end{enumerate}
+The advantage of ${\cal A}$ is defined as follows: \[
+{\sf Adv}=|Pr[b'\leftarrow{\cal A},b=b']-1/2|\]
+ We say that the tag authentication scheme achieves leakage-resilient
+backward security if and only if the advantage is negligible for any
+polynomial time adversary ${\cal A}$. 
+\end{definition}
+On the other hand, the adversary has unlimited time for breaching
+privacy because the time available to the adversary for linking two
+protocol messages is not limited by the authentication server. Thus,
+we consider that the adversary can obtain all the information from
+the tag, i.e., full leakage of information occurs. The definition
+of forward privacy is as given below.
+\begin{definition}
+\textbf{(Forward-privacy)} We consider the following ${\cal A}_{FP}$
+that performs the following game. 
+\begin{enumerate}
+\item ${\cal A}_{FP}$ accesses the tag adaptively by sending $i$ and receives
+answer $a_{i}$. 
+\item ${\cal A}_{FP}$ accesses the authentication server adaptively by
+sending $a_{i}$ and receives an answer $id$ or NG. 
+\item ${\cal A}_{FP}$ accesses the Leakage oracle by sending $k$ and receives
+the partial secret $s_{k}$. 
+\item ${\cal A}_{FP}$ accesses the Test oracle, and the oracle chooses
+$b\in_{U}\{0,1\}$ randomly. If $b=0$, ${\cal A}$ is given $a_{j}$,
+otherwise ${\cal A}$ is given $r$ as a truly random value, where
+$a_{j}$ is the $j$-th protocol message from the tag for $j<k$. 
+\item ${\cal A}_{FP}$ guesses $b$ and outputs $b'$. 
+\end{enumerate}
+The advantage of ${\cal A}$ is defined as follows. \[
+{\sf Adv}=|Pr[b'\leftarrow{\cal A},b=b']-1/2|\]
+ We say that the tag authentication scheme achieves forward privacy
+if and only if the advantage is negligible for any polynomial time
+adversary ${\cal A}_{FP}$. 
+\end{definition}
+
+\subsection{Leakage-Resilient Mode-of-Operation}
+
+The main building block of our proposed protocol to achieve leakage-resilient
+backward security is the {}``leakage-resilient stream cipher'' proposed
+by Pietrzak\cite{P09}. Fig. \ref{fig:P09} illustrates the mode of
+operation from any wPRF (weak pseudo-random function ) to a leakage-resilient
+stream cipher. The detailed construction is as follows.
+
+%
+%\begin{figure}
+%\begin{centering}
+%\includegraphics[scale=0.8,bb = 0 0 200 100, draft, type=eps]{P09.pdf} 
+%\par\end{centering}
+%\caption{Leakage-resilient stream cipher in \cite{P09}}
+%\centering{}\label{fig:P09} 
+%\end{figure}
+
+
+\begin{figure}
+\begin{center}
+\includegraphics[scale=0.8]{P09.pdf}
+\caption{Leakage resilient stream cipher in \cite{P09}}
+\label{fig:P09}
+\end{center}
+\end{figure}
+
+
+
+\begin{description}
+\item [{Construction:}] Let $F:\{0,1\}^{k}\times\{0,1\}^{n}\to\{0,1\}^{k+n}$
+be a function. Then, with $S^{F}$, we describe the following simple
+construction of a stream cipher. 
+\item [{Initialization:}] The initial state is $S_{0}=[K_{0},K_{1},X_{0}]$,
+where $K_{0},K_{1}\stackrel{*}{\leftarrow}\{0,1\}^{k}$ and $X_{0}\stackrel{*}{\leftarrow}\{0,1\}^{n}$.
+Only $K_{0},K_{1}$ must be kept secret; $X_{0}$ can be public. 
+\item [{State:}] The state before the $i$-th round begins is $S_{i}=[K_{i-1},K_{i},X_{i-1}]$. 
+\item [{Computation:}] In the $i$-th round, $S^{F}(S_{i-1})$ computes
+\[
+(K_{i+1},X_{i}):=F(K_{i-1},X_{i-1})\]
+ and outputs $X_{i}$. Then, the state $S_{i-1}=[K_{i-1},K_{i},X_{i-1}]$
+is replaced with $S_{i}=[K_{i},K_{i+1},X_{i}]$. 
+\end{description}
+This stream cipher is secure in the absence of side-channel attack,
+that is, there is no leakage of $K_{i}$s if $F$ is a wPRF.
+
+Next, we introduce a side-channel adversary in this stream cipher.
+We consider an adversary ${\cal A}$ who can attack $S^{F}$ by choosing
+any function $f_{i}:\{0,1\}^{k}\to\{0,1\}^{\lambda}$ before round
+$i$ begins and receives the normal output $X_{i}$ of $S^{F}$ and
+also leakage $\Lambda_{i}\stackrel{def}{=}f_{i}(K_{i-1})$ at the
+end of the round .
+
+Let ${\sf view}_{l}$ denote the view of the adversary after $X_{l}$
+has been computed, i.e., \[
+{\sf view}_{l}=[X_{0},\dots,X_{l},\Lambda_{1},\dots,\Lambda_{l}].\]
+ We denote by ${\sf view}_{l}^{-}={\sf view}\backslash X_{l}$ the
+${\sf view}_{l}$ that excludes the last output $X_{l}$. The security
+concept we consider requires that $X_{l+1}$ be \textit{indistinguishable}
+from random, even when ${\sf view}_{l}$ is given (which will imply
+that it is $unpredictable$ given ${\sf view}_{l+1}^{-}$).
+
+We denote by $S(S_{0})\stackrel{l}{\to}{\sf A}$ the random experiment
+in which an adversary ${\sf A}\in{\cal A}_{\lambda}$ attacks $S$
+for $l$ rounds, and we denote by ${\sf view}(S(S_{0})\stackrel{l}{\to}{\sf A})$
+the view ${\sf view}_{l}$ of ${\sf A}$ at the end of the attack.
+For any circuit ${\sf D}:\{0,1\}^{*}\to\{0,1\}$, we denote by ${\sf AdvInd}(D,A,S,l)$
+the advantage of D in distinguishing $K_{l}$ from a random $U_{n}\stackrel{*}{\leftarrow}\{0,1\}^{n}$
+given ${\sf view}(S(S_{0})\stackrel{l-1}{\to}{\sf A})$; formally,
+
+\begin{eqnarray*}
+{\sf AdvInd}(D,A,S,l)=|p_{real}-p_{rand}|,{\rm where}\\
+p_{rand}\stackrel{def}{=}Pr_{S_{0}}[D({\sf view}(S(S_{0})\stackrel{l-1}{\to}A),U_{n})=1]\\
+p_{real}\stackrel{def}{=}Pr_{S_{0}}[D({\sf view}(S(S_{0})\stackrel{l-1}{\to}A),X_{l})=1]\end{eqnarray*}
+
+
+Then, we have the following proof of the security of this stream cipher
+with leakage resilience as follows. 
+\begin{theorem}
+Let $F:\{0,1\}^{k}\times\{0,1\}^{n}\to\{0,1\}^{k+n}$ be a $(\epsilon_{prf},s_{prf},n/\epsilon_{prf})$-secure
+wPRF where $\epsilon_{PRF}\ge n\cdot2^{-n/3}$ and $n\ge20$. Let
+$\lambda=\log(\epsilon_{prf}^{-1})/6$ and $s'=s_{prf}\epsilon_{PRF}^{2}/2^{\lambda+2}(n+k)^{3}$.Then,
+for any adversary ${\cal A}\in A_{\lambda}$ and distinguisher $D$,
+where $size(S\stackrel{l-1}{\to}A)+size(D)\le s'$, we have for any
+$l\in N$ \[
+AdvInd(D,A,S,l)\le8\cdot l\cdot\epsilon_{PRF}^{1/12}.\]
+ 
+\end{theorem}
+The proof of this theorem is shown in \cite{P09}.
+
+The wPRF 
+%that this stream cipher uses 
+can be constructed by using
+a pseudo-random permutation, which is the standard security concept
+of the block cipher. Let $BC:\{0,1\}^{k}\times\{0,1\}^{n}\to\{0,1\}^{n}$
+be a block cipher similar to AES. %
+%\footnote{The security parameters in AES are different: $k=n=128$ and $k=n=256$.%}. 
+Then \[
+F(K,X)=BC(K,X||0)||BC(K,X||1)\]
+ is a secure PRF (and thus wPRF).
+
+%	Proposed Scheme
+\section{Proposed Scheme}
+\subsection{Overview}
+
+Our protocol aims to achieve both leakage resilience for authenticity
+and forward privacy. To fulfill both requirements, we combine the
+idea of
+%hash-chain-based authentication protocol proposed by 
+Ohkubo et al.\cite{OSK03}
+and the leakage-resilient mode of operation proposed by Pietrzak\cite{P09}.
+Our scheme achieves forward privacy by chain of one-way functions,
+and leakage resilience for authenticity is realized by the leakage-resilient
+mode of operation.
+
+For the $i$-th authentication, the tag calculates $P_{i}$,
+the $i$-th output of the leakage-resilient mode of operation. 
+Concurrently,
+%the tag calculates $G_{i}$, the $i$-th value of the hash chain,
+%similar to Ohkubo's scheme. Finally, the tag determines the final
+%protocol message by applying a hash function to the concatenation
+%of $G_{i}$ and $P_{i}$. 
+The main difference from \cite{P09} is we use a function which is wPRF and one-wayness
+for $F$ instead of simple wPRF.
+We have no good model for such function, thus we model it by Random Oracle.
+%The outline of this protocol is shown in
+%Fig. \ref{fig:Proposal}. 
+If an $l$-bit leakage occurs, the pseudo-randomness
+of this hash value is preserved with the help of Pietrzak's scheme,
+and this protocol need not be refreshed. %
+
+%\begin{figure}[htb]
+%\begin{centering}
+%\includegraphics[scale=0.3,bb = 0 0 200 100, draft, type=eps]{fig-propose-2.pdf} 
+%\par\end{centering}
+%\caption{Outline of the proposed scheme}
+%\centering{}\label{fig:Proposal} 
+%\end{figure}
+
+%\begin{figure}[htb]
+%\begin{center}
+%\includegraphics[scale=0.5]{fig-propose-3.pdf}
+%\caption{Outline of proposed scheme}
+%\label{fig:Proposal}
+%\end{center}
+%\end{figure}
+
+
+\subsection{Detailed Protocol}
+
+Let $P(K_{0},X_{0},K_{1},i)$ be a leakage-resilient stream cipher
+$S^{F}$, as proposed by Pietrzak, where the inner function $F'(\cdot)$ is random oracle.
+%$H(\cdot)$ be a random oracle,
+%and $G(\cdot)$ be a one-way function.
+\begin{description}
+\item [{Setup:}] The tag ${\cal {T}}$ and an authentication server ${\cal {S}}$
+securely share secrets $K_{0},X_{0},K_{1}$ for $P(\cdot)$.
+\item [{Tag:}] For the $i$-th authentication, Tag ${\cal T}$ performs
+the following actions:
+
+\begin{enumerate}
+\item Sends answer $X_i$ from $(X_i, K_i ) =F'(X_{i-1},K_{i-1})$ to the
+reader 
+\item Stores $X_{i},K_{i+1}$ and erases $K_{i-1},X_{i-1}$. 
+\end{enumerate}
+\item [{Authentication Server:}] The authentication server has a list of
+$(ID,i,K_{0},X_{0},K_{1})$, where $K_0, K_1$ are the initial secret
+information and is different for each tag. The authentication server
+confirms $X_{i}\stackrel{?}{=} X_{i'}$
+ s.t. $(X_{i'}, K_{i'}) = F'(X_{i'-1},K_{i'-1})$.
+ If the server finds $a_{i}'$ s.t. $a_{i}'=a_{i},$ then ID is returned;
+otherwise, {}``NG'' is returned.
+\end{description}
+
+\subsection{Security Analysis}
+
+%We give security analysis for backward security and forward privacy of our scheme.
+
+\begin{theorem}
+\textbf{(Backward security)} If we assume that $F'(\cdot)$ is a random
+oracle and $P(K_{0},X_{0},K_{1},i)$ is a Pietrzak's mode of operation with $F'(\cdot)$, 
+the adversary can be successfully authenticated with negligible
+probability after he/she gets past protocol messages and a partially
+leaked secret. \end{theorem}
+\begin{proof}
+A random oracle is also wPRF. Thus, we can estimate indistinguishability of $A_{i+1}$ from random 
+number by using Theorem, in which the advantage of adversary is negligible.
+Thus, Pietrzak's mode of operation with $F'(\cdot)$ is secure backward authentication scheme with
+partial leakage.
+\qed \end{proof}
+
+\begin{theorem}
+\textbf{(Forward-privacy)} If we assume that $F'(\cdot)$ is a random
+oracle and $P(K_{0},X_{0},K_{1},i)$ is a Pietrzak's mode of operation with $F'(\cdot)$,
+ the proposed authentication scheme
+is forward private. 
+\end{theorem}
+\begin{proof}
+Assuming an adversary $A_{fs}$ against forward-privacy, we construct a simulator 
+$A_{fs}$ which attack onewayness
+of $F'(\cdot)$.
+
+For given instance $F'(\cdot)$ and $X_j, K_j, k_{j+1}$ of onewayness, simulator performs the following steps.
+Simulator select index $k$ for tampering with probability of $2^{-n}$ for $n = 2^{l_F}$, computes 
+$P_i = P(X_i, K_i)$
+for 
+$i = k+1, \ldots, n$.
+
+\begin{description}
+\item[F-Oracle:] 
+Initially, the simulator appends entry 
+$(i, X_i || K_i , X_{i+1} || K_{i+2})$
+to list $L_F$ for $i = k+1, \ldots, n$.
+On query $X_i || K_i$, if $(*, X_i || K_i, X_{i+1} || K_{i+2}) \in L_F$,
+simulator answers the corresponding $X_{i+1} || K_{i+2}$.
+Otherwise, selects and answers random $X_i || K_i$ and appends entry $(-, s||X, a)$ to list $L_F$.
+(Here, $*$ represents wildcard and $-$ represents empty).
+  
+\item[Tag-Oracle:] 
+On query $i$, if $(i, *, a) \in L_F$ simulator answers corresponding $a$, otherwise selects and answers 
+random $a$ and appends entry $(i, - , a)$ to list $L_F$.
+On tamper query $k$, simulator answers $X_i, K_i, K_{i+1}$.
+
+
+\item[Auth-Oracle:] 
+Upon query $a$, return $i$ if $(i, *,a) \in L_H$, otherwise return ``NG''.
+\end{description}
+
+In a real attack, if adversary $A_{fs}$ does not ask $X_{j-1} || K_{j-1}$ for F-Oracle where $j$ is the index sent to
+challenger (we call this event $\cal{E}$), challenger's coin $b$ is independent of $A_{fs}$'s view.
+Thus, $Pr[b = b'] \le 1/2 Pr[\cal{E}]+$ $Pr [\neg \cal{E}] =$ $1/2 + 1/2Pr[\neg \cal{E}]$
+and $Pr[b=b'] \ge 1/2Pr[\cal{E}] =$$1/2-1/2Pr[\neg \cal{E}]$.
+We have then $1/2Pr[\neg \cal{E}] \ge $$|Pr[b= b'] -1/2| \ge \epsilon$, which means 
+that adversary $A_{fs}$ asks $X_{j-1}||K_{j-1}$ for F-Oracle with probability $\ge 2\epsilon$ in the
+real attack, where $\epsilon$ is success probability of $A_{fs}$.
+
+Contradiction of latter case of Tag-Oracle and Auth-Oracle can happen with probability 
+$q_T q_R /2^{l}$, where $q_T, q_R$ are the number of query to Tag-Oracle and Reader-Oracle respectively. 
+Hereafter, we consider the case when this does not happen.
+If $X_{j-1}||K_{j-1} (j-1 < k)$ is asked for F-Oracle, contradiction of latter case of H-Oracle and of Tag-Oracle, or the latter case of
+H-oracle and Auth-Oracle can happen. In this case, simulator can obtain $X_{j-1}|| K_{j-1}$ s.t. 
+$X_{j}|| K_{j+1} = P(X_{j-1}|| K_{j-1})$.
+Otherwise, until $X_{j-1}|| K_{j-1}$ is 
+asked for F-Oracle where $j$ is the index sent to challenger, simulation is perfect.
+Thus adversary $A_{auth}$ asks $X_{j-1}|| K_{j-1}$ with probability $\ge 2\epsilon$, 
+and simulator can obtain $X_{j-1}|| K_{j-1}$ s.t. 
+$X_{j}|| K_{j+1} = P(X_{j-1}|| K_{j-1})$.
+
+Summing up these, we have $\epsilon' \ge ((1-q_T q_R/2^{l})2\epsilon)/n$, where 
+$\epsilon'$ is success probability of $A_{ow}$.\qed 
+\end{proof}
+
+In \cite{P09}, the author claims that the stream cipher is also 
+has forward-security with partial leakage.
+Theorem 3 shows that it can assure forward security
+even for full-leakage by using Random Oracle instead of wPRF.
+
+\subsection{Efficiency}
+%In the cryptographic sense, the proposed 
+Our protocol can be executed
+in one move. For both the tag and the authentication server, 
+only one execution of random oracle is executed.
+Therefore, the proposed protocol
+is much more efficient than Burmester's protocol and Ohkubo's protocol, 
+even when the proposed protocol
+has all the desired properties.
+
+
+\section{Conclusion}
+
+In this paper, we propose the first RFID-authentication scheme with
+leakage resilience for backward security and forward privacy. Our
+protocol has an additional functionality, i.e., leakage resilience
+for backward security, in contrast to OSK protocols and rigorous leakage
+resilience, in contrast to Burmester's protocol. Moreover, our protocol
+is much more efficient than Burmester's and Ohkubo's protocol. The security of
+our protocol is proved on the basis of the existence of a random oracle
+and, though Pietrzak's pseudo-random generator
+is secure under the standard assumption. Because random oracle 
+is an ideal assumption, developing
+a protocol in the standard model is a future task.
+\begin{thebibliography}{21}
+\bibitem{ADW09} J. Alwen, Y. Dodis and D. Wichs, {}``Leakage-Resilient
+Public-Key Cryptography in the Bounded-Retrieval Model,'' \textit{http://eprint.iacr.org/2009/160}.
+
+\bibitem{AO05} G. Avoine and P. Oechslin, {}``A Scalable and Provably
+Secure Hash Based RFID Protocol,'' In Proc. of IEEEInt. Workshop
+on Pervasive Computing \& Communication Security (PerSec 2005), IEEE
+Computer Society Press.
+
+\bibitem{BLPPRS08} A. Bogdanov, G. Leander, C. Paar, A. Posehmann,
+M. J. B. Robshaw and Y.Seurin, {}``Hash Functions and RFID Tags:
+Mind the Gap,'' In Proc. of CHES 2008, LNCS 5154, pp. 283-299, 2008.
+
+\bibitem{BM09} M. Burmester and J. Munila, {}``A Flyweight RFID
+Authentication Protocol,'' Workshop on RFID Security -- RFIDSec'09,
+Leuven, Belgium, July 2009. http://eprint.iacr.org/2009/212.pdf
+
+\bibitem{CDDLLW07}D. Cash, Y. Z. Ding, Y. Dodis, W. Lee, R. Lipton
+and S. Walfish, \textquotedbl{}Intrusion-Resilient Key Exchange in
+the Bounded Retrieval Model,\textquotedbl{} In Proc. of TCC 2007,
+LNCS 4392, pp. 479-498, 2007.
+
+
+%\bibitem{CDL08}
+%E. Y. Choi, L. D. H. and I. Lim J,
+%``Anti-cloning Protocol Suitable to Epcglobal Class-1 Generation-2 RFID Systems,''
+%Computer Standards \& Interfaces, available online, In press, Corrected Proof, 2008.
+
+
+\bibitem{CLW06} G. Di Crescenzo, R. Lipton and S. Walfish, {}``Perfectly
+Secure Password Protocols in the Bounded Retrieval Model,'' In Proc.
+of TCC 2006, LNCS 3876, pp. 225-244, 2006.
+
+
+%\bibitem{D06}
+%T. Dimitriou,
+%``A Secure and Efficient RFID Protocol that can Make Big Brother Obsolete,''
+%In Proc. of Intrn. Conf. on Pervasive Computing and Communication (PerCom2006), IEEE Press.
+
+
+\bibitem{DP08} S. Dziembowski and K. Pietrzak, {}``Leakage-resilient
+cryptography'' Proc. In FOCS (2008), 25-28 Oct. 2008, pp. 293 - 302.
+
+\bibitem{GGM86} O. Goldreich, S. Goldwasser and S. Micali, {}``How
+to construct pseudo-random functions,'' Journal of ACM 33, 4 (1986).
+
+\bibitem{HM04} D. Henrici and P. M. Muller, {}``Hash-based enhancement
+of location privacy for radio-frequency identification devices using
+varying identifiers,'' Proc. of IEEE Int. Conf. on Pervasive Computing
+and Communications, 2004, pp.149-153.
+
+\bibitem{JP03} A. Juels and R. Pappu, {}``Squealing Euros:Privacy-Protection
+in RFID-Enabled Banknotes,'' In Proc. of FC 2003, LNCS2742, pages
+103-121. Springer-Verlag.
+
+\bibitem{JW06} A. Juels and S. A. Weis, {}``Defining Strong Privacy
+for RFID,'' http://eprint.iacr.org/2006/137.
+
+\bibitem{LBM07} T. V. Le, M. Burmester and B. de Medeiros, {}``Universally
+Composable and Forward-secure RFID Authentication and Authenticated
+Key Exchange,'' In Proc. of ASIACCS 07, pp.242 - 252.
+
+
+%\bibitem{MSW05}
+%D. Molnar, A. Soppera and D. Wagner,
+%``A Scalable, Delegatable Pseudonym Protocol Enabling Ownership Transfer of RFID Tags,''
+%In Proc. of  SAC 2005, LNCS 3897, pp. 276-290,
+%Springer-Verlag.
+
+
+\bibitem{NS09} M. Naor and G. Segev, {}``Public-Key Cryptosystem
+Resilient to Key leakage,'' In Proc. of CRYPTO 2009, LNCS 5677, pp.18-35.
+
+\bibitem{NSMS08} C. Y. Ng, W. Susilo. Y. Mu and R. Safavi-Naini,
+{}``RFID Privacy Models Revisited,'' In Proc. of ESORICS 2008, LNCS
+5283, pp.251-266, 2008.
+
+
+%\bibitem{OS06} M. Ohkubo and K. Suzuki, 
+%``Forward Secure RFID Privacy Protection Scheme with Restricted Traceability," In Proc. of ACNS 2006.
+
+
+\bibitem{OSK03} M. Ohkubo, K. Suzuki and S. Kinoshita, \textquotedbl{}Cryptographic
+Approach to a Privacy Friendly Tang,'' Presented at the RFID Privacy
+Workshop, MIT, USA (2003).
+
+\bibitem{P09} K. Pietrzak, {}`` A Leakage-Resilient Mode of Operation,''
+In Proc. of Eurocrypt 2009, LNCS 5479, pp. 462-482, Springer-Verlag.
+
+\bibitem{PSPMY08} C. Petit, F.-X. Standaert, O. Pereira, T. Malkin
+and M. Yung, {}``A Block Cipher based Pseudo Random Number Generator
+Secure against Side-channel Key Recovery,'' In Proc. of ASIACCS 2008,
+pp.56-65. 2008
+
+\bibitem{SWE02} S. E. Sharma, S. A. Weiss and D. W. Engels, {}``RFID
+systems and security and privacy implications,'' In Proc. of CHES2002,
+LNCS vol.2523, pp. 454-469, Springer-Verlag.
+
+\bibitem{BLM06} M. Burmester, T. van Le and B. De Medeiros, {}``Provably
+Secure Ubiquitous Systems: Universally Composable RFID Authentication
+Protocols,'' In Proc. of 2nd IEEE CreateNet Int. Conf. on Security
+and Privacy in Networks (SECURECOMM 2006), IEEE Press.
+
+\bibitem{BM08} M. Burmester and B. De Medeiros, {}``The Security
+of EPC Gen2 Compliant RFID Protocols,'' In Proc. of ACNS 2008, LNCS
+5037, pp. 490-506, Springer-Verlag.
+
+\bibitem{V07} S. Vaudenay, {}``On Privacy Models for RFID,'' In
+Proc. of ASIACRYPT 2007, LNCS 4833, pp. 68-87, Springer-Verlag.
+\end{thebibliography}
+
+\end{document}

@@ -1,0 +1,95 @@
+%
+%Paper for FC 2019
+%Title: How to encourage cryptocurrency exchange to secure their system
+%Authors: Shin'ichiro Matsuo, Yuta Takanashi, Pindar Wong, Eric Burger
+%
+
+\documentclass[english]{llncs}
+\usepackage[T1]{fontenc}
+\usepackage[latin9]{inputenc}
+\usepackage[dvipdfmx]{graphicx}
+
+\usepackage{babel}
+
+%\title{What is Cryptocurrency Exchange? - the reality and how to secure it}
+\title{Reality of less trust than expected to trustless financial system}
+
+\titlerunning{Reality of less trust than expected to trustless financial system}
+\author{
+Yuta Takanashi\inst{1,2}\and Shin'ichiro Matsuo \inst{1} \and Pindar Wong\inst{3} \and Eric Burger\inst{1}}
+\institute{Georgetown University
+\and Financial Services Agency
+\and VeriFi Ltd.}
+\date{\today} 
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+After the original publication of the Bitcoin paper~\cite{N08}, cryptocurrency exchange was born to connect the cryptocurrency world 
+to fiat currency world. Although most persons believe that the cryptocurrency exchange plays the simple role of exchange, 
+several security incidents raise a big question on the reality of the cryptocurrency exchange. That is, what kinds of operations
+are conducted, whats are the informational asset to be protected, and what kinds of security postures are required.
+
+In this paper, we report the results of investigation of 16 registered and 16 quasi-registered cryptocurrency
+exchanges by Japanese regulators, then analyze the reality of functionalities, implementation and operations of real cryptocurrency exchanges.
+Then, we conduct analysis from the information security management system (ISMS) standard point of views, to clarify
+the required actions to secure the implementation and operation of cryptocurrency exchanges. They includes analysis on
+blockchain protocol, cryptographic key management, system security, and operation. We shows the current activities in IETF and 
+ISO to have a common document on security of cryptocurrency exchange.
+
+{\bf Keywords:} Cryptocurrency exchange, Information security management, Standards
+\end{abstract}
+
+\input{introduction.tex}
+
+
+\section{Investigation and audit to 32 cryptocurrency exchanges}
+\subsection{Security incidents and their history}
+\subsection{Perspectives of investigations}
+\subsection{Results of investigation and audit}
+
+
+
+\section{Analysis of the reality of ``Cryptocurrency Exchanges''}
+\subsection{How do cryptocurrency exchanges introduce themselves and general persons recognize it}
+\subsection{Functionalities which real cryptocurrency exchanges have}
+\subsection{Shortage of security consideration}
+
+
+
+
+
+
+\section{Reconsidering governance and security management}
+\subsection{Threat modeling and security requirements}
+\subsection{Analysis based on governance and security management standard}
+
+
+
+
+\section{Directions and action items to secure cryptocurrency exchanges}
+\subsection{Required technologies}
+\subsection{Required operations}
+\subsection{Standardization}
+
+
+
+
+\section{Conclusion}
+
+\begin{thebibliography}{21}
+\bibitem{N08} Satoshi Nakamoto, ``Bitcoin: A Peer-to-Peer Electronic Cash System,'' \textit{https://bitcoin.org/bitcoin.pdf}.
+
+\bibitem{IETF18}
+M. Sato, M. Shimaoka, and H. Nakajima, ``  General Security Considerations for Crypto Assets Custodians,''
+ \textit{https://tools.ietf.org/html/draft-vcgtf-crypto-assets-security-considerations-02}
+
+\bibitem{ISOTR23576}
+S. Matsuo and A. L. Castro (ed.), ``ISO TR 23576: Blockchain and distributed ledger technologies -- Security of digital asset custodians,''  under development,
+\textit{https://www.iso.org/standard/76072.html}
+
+
+\end{thebibliography}
+
+\end{document}
